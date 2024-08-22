@@ -335,7 +335,7 @@ class uni_bms:
             # Voltages start at index 2, in groups of 3                                                             
             #Voltages in 1000 -> 3590 = 3.590V
             for i in range(self.cell_count) :                                                                             
-                voltage              = self.helper[BatId].battery.get_cell_voltage(i) * 1000
+                voltage              = int(self.helper[BatId].battery.get_cell_voltage(i) * 1000)
                 Status.append(voltage)
                 self.cells[i] = voltage
                                                                     
