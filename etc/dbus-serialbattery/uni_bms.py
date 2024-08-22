@@ -357,11 +357,11 @@ class uni_bms:
             Status.append(self.temp_4)              
                                                                                                                         
             # Battery voltage in 100 -> 25,81 = 2581                                                                                       
-            self.voltage             = self.helper[BatId].battery.voltage * 100
+            self.voltage             = int(self.helper[BatId].battery.voltage * 100)
             Status.append(self.voltage)     
                                                                                                                         
             # Current in 100 -> 9,4A = 940; + = charge; - = discharge                                                                                               
-            self.act_current         = self.helper[BatId].battery.current * 100
+            self.act_current         = int(self.helper[BatId].battery.current * 100)
             Status.append(self.act_current)
                                                                                                                         
             # Remaining capacity, %                                                                                 
