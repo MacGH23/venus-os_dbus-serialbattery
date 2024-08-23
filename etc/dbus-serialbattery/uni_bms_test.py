@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-# Reading bms via dbus-Serial lib
+# Reading bms via uni-bms lib
 
 # macGH 20.08.2024  Version 0.1.0
 
@@ -14,10 +14,10 @@ from uni_bms import *
 import logging
 
 
-# "" = default = "/dev/ttyUSB00"
+# "" = default = "/dev/ttyUSB0"
 # if you have another device specify here
-#DEVPATH = "/dev/ttyAMA0" #with Waveshare CAN/RS485 HAT 
-DEVPATH = "/dev/ttyUSB0" 
+DEVPATH = "/dev/ttyAMA0" #with Waveshare CAN/RS485 HAT 
+#DEVPATH = "/dev/ttyUSB0" 
 USEDIDADR = 1
 
 # Enter Loglevel 0,10,20,30,40,50 
@@ -48,7 +48,7 @@ atexit.register(on_exit)
 signal.signal(signal.SIGTERM, handle_exit)
 signal.signal(signal.SIGINT, handle_exit)
 
-mylogs = logging.getLogger()
+mylogs = logging.getLogger("UNIBMSTEST")
 mylogs.setLevel(LOGLEVEL)
 
 if logtofile == 1:

@@ -11,11 +11,15 @@
 ############################################################################
 
 # Reading BMS via dbus-serialbattery 
-# ReUsed https://github.com/Louisvdw/dbus-serialbattery to make this class
-# Only tested with 
+# ReUsed 
+# https://github.com/mr-manuel/venus-os_dbus-serialbattery
+# to make this class
+# curretnly only tested with 
 # - JKBMS B2A8S20P
 # - DALY BMS 
 # and with original JK RS485 USB adapter and Daly USB-UART adapter ! 
+# but the original dbus serial tested and it should work with all other devices, too
+#
 # Use at your own risk !  
 #
 # The return is a list of data.
@@ -33,6 +37,34 @@
 #
 # Version history
 # macGH 20.08.2024  Version 0.1.0
+
+######################################################################################
+# Explanations (see also uni_bms_text.py for an example)
+######################################################################################
+
+######################################################################################
+# def __init__(self, devpath, driverOption, loglevel):
+#
+# devpath
+# Add the /dev/tty device here, mostly .../dev/ttyUSB0, if empty default path /dev/ttyUSB0 is used
+#
+# driverOption
+# Id for bluetooth and can devices
+# 0: autotetect for all non BT / CAN devices
+# 1: JKBMS bluettooth - Jkbms_Ble
+# 2: JDB bluetooth    - LltJbd_Ble
+# 3: CAN devices for JKBAMS and DALY
+#
+# loglevel
+# Enter Loglevel 0,10,20,30,40,50 
+# CRITICAL   50
+# ERROR      40
+# WARNING    30
+# INFO       20
+# DEBUG      10
+# NOTSET      0
+######################################################################################
+
 
 import os
 import sys
@@ -104,27 +136,6 @@ expected_bms_types = [
 ]
 
 
-######################################################################################
-# Explanations
-######################################################################################
-
-######################################################################################
-# def __init__(self, devpath, loglevel):
-#
-# devpath
-# Add the /dev/tty device here, mostly .../dev/ttyUSB0, if empty default path /dev/ttyUSB0 is used
-#
-# loglevel
-# Enter Loglevel 0,10,20,30,40,50 
-# CRITICAL   50
-# ERROR      40
-# WARNING    30
-# INFO       20
-# DEBUG      10
-# NOTSET      0
-######################################################################################
-
-
 #########################################
 ##class
 class uni_bms:
@@ -138,19 +149,14 @@ class uni_bms:
         if devpath  != "": self.devpath    = devpath
         if loglevel != "": self.loglevel   = loglevel
         
-        logging.basicConfig(level=loglevel, encoding='utf-8')
         logging.debug("Init bms class")
         self.cells = [0]*24
         self.battery = {}
         self.helper  = {}
         self.BatIds = []
 
-
-
-
     def bms_open(self):
-        logging.debug("open serial interface")
-
+        logging.info("open serial interface")
         if(self.driveroption != 0):
             """
             Import ble classes only, if it's a ble port, else the driver won't start due to missing python modules
@@ -167,7 +173,7 @@ class uni_bms:
             class_ = eval(self.devpath)
             testbms = class_("", 9600, "define 2nd arg")
             if testbms.test_connection():
-                logger.info("Connection established to " + testbms.__class__.__name__)
+                logging.info("Connection established to " + testbms.__class__.__name__)
                 self.battery[0] = testbms
 
             if self.driveroption == 3: #can interface:
@@ -212,7 +218,7 @@ class uni_bms:
             elif key_address != 0:
                 # remove item from battery dict so that only the found batteries are used
                 del self.battery[key_address]
-                logger.warning(
+                logging.warning(
                     "No battery connection at "
                     + self.devpath
                     + " and this Modbus address "
@@ -220,7 +226,7 @@ class uni_bms:
                 )
 
         if not battery_found:
-            logger.error(
+            logging.error(
                 "ERROR >>> No battery connection at "
                 + self.devpath
                 + (
@@ -247,7 +253,7 @@ class uni_bms:
         retry = 1
         retries = 2
         while retry <= retries:
-            logger.info(
+            logging.info(
                 "-- Testing BMS: " + str(retry) + " of " + str(retries) + " rounds"
             )
             # create a new battery object that can read the battery and run connection test
@@ -262,7 +268,7 @@ class uni_bms:
                     else:
                         _bms_address = None
 
-                    logger.info(
+                    logging.info(
                         "Testing "
                         + test["bms"].__name__
                         + (
@@ -279,7 +285,7 @@ class uni_bms:
                         port=_port, baud=baud, address=_bms_address
                     )
                     if battery.test_connection() and battery.validate_data():
-                        logger.info(
+                        logging.info(
                             "Connection established to " + battery.__class__.__name__
                         )
                         return battery
@@ -293,7 +299,7 @@ class uni_bms:
                     ) = sys.exc_info()
                     file = exception_traceback.tb_frame.f_code.co_filename
                     line = exception_traceback.tb_lineno
-                    logger.error(
+                    logging.error(
                         "Non blocking exception occurred: "
                         + f"{repr(exception_object)} of type {exception_type} in {file} line #{line}"
                     )
@@ -332,7 +338,6 @@ class uni_bms:
             self.cell_count          = self.helper[BatId].battery.cell_count
             Status.append(self.cell_count)    
                         
-            # Voltages start at index 2, in groups of 3                                                             
             #Voltages in 1000 -> 3590 = 3.590V
             for i in range(self.cell_count) :                                                                             
                 voltage              = int(self.helper[BatId].battery.get_cell_voltage(i) * 1000)
