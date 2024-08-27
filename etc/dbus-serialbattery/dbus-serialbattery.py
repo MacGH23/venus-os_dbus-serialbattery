@@ -78,6 +78,18 @@ logger.info("")
 logger.info("Starting dbus-serialbattery")
 
 
+# check if utils.BMS_TYPE is not empty and all BMS types in the list are supported
+if len(utils.BMS_TYPE) > 0:
+    for bms_type in utils.BMS_TYPE:
+        if bms_type not in [bms["bms"].__name__ for bms in supported_bms_types]:
+            logger.error(
+                f'ERROR >>> BMS type "{bms_type}" is not supported. Supported BMS types are: '
+                + f"{', '.join([bms['bms'].__name__ for bms in supported_bms_types])}"
+                + "; Disabled by default: ANT, MNB, Sinowealth"
+            )
+            sys.exit(1)
+
+
 # count loops
 loop_count = 0
 

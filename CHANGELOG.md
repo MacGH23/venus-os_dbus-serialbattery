@@ -69,6 +69,7 @@
 * Added: Daren BMS with https://github.com/mr-manuel/venus-os_dbus-serialbattery/pull/65 by @cpttinkering
 * Added: Multiple BMS on one USB to RS485/Modbus adapter now possible. The BMS needs to be able to set different addresses to each battery by @mr-manuel
 * Added: Send telemetry data to see which driver versions and BMS are used the most. Can be disabled in the `config.ini` by @mr-manuel
+* Added: Show error in log, if an unknown BMS type was added in the `config.ini` by @mr-manuel
 * Changed: Call `get_settings()` in `test_connection()` for all battery classes, removed `get_settings()` call from `setup_vedbus()` by @mr-manuel
 * Changed: Daly BMS - Fixed issues where faulty readings set values to None by @mr-manuel
 * Changed: Fixed alarms for some BMS and cleaned up `Protection()` class
