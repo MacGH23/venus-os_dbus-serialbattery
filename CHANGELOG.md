@@ -62,6 +62,9 @@
   * `BULK_AFTER_DAYS` -> `SOC_RESET_AFTER_DAYS`
 
 
+## v1.5.x
+* Added: Daly BMS - Connect multiple BMS to the same RS485 port by @CaptKrisp
+
 ## v1.4.20240928
 
 * Added: `History()` class that holds all BMS history values by @mr-manuel
