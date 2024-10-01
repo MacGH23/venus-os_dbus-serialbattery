@@ -75,7 +75,7 @@ import struct
 from typing import Union
 from time import sleep
 
-from bmshelper import bmsHelper
+from bmshelper import DbusHelper
 from utils import logger
 import utils
 from battery import Battery
@@ -259,7 +259,7 @@ class uni_bms:
 
 
         for key_address in self.battery:
-            self.helper[key_address] = bmsHelper(self.battery[key_address], key_address)
+            self.helper[key_address] = DbusHelper(self.battery[key_address], key_address)
             self.BatIds.append(key_address)
 
         # print log at this point, else not all data is correctly populated
