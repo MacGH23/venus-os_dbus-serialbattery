@@ -30,6 +30,7 @@ MbPage {
     property VBusItem _b22: VBusItem { bind: service.path("/Balances/Cell22") }
     property VBusItem _b23: VBusItem { bind: service.path("/Balances/Cell23") }
     property VBusItem _b24: VBusItem { bind: service.path("/Balances/Cell24") }
+
     property VBusItem volt1: VBusItem { bind: service.path("/Voltages/Cell1") }
     property VBusItem volt2: VBusItem { bind: service.path("/Voltages/Cell2") }
     property VBusItem volt3: VBusItem { bind: service.path("/Voltages/Cell3") }
@@ -54,51 +55,66 @@ MbPage {
     property VBusItem volt22: VBusItem { bind: service.path("/Voltages/Cell22") }
     property VBusItem volt23: VBusItem { bind: service.path("/Voltages/Cell23") }
     property VBusItem volt24: VBusItem { bind: service.path("/Voltages/Cell24") }
-    property string c1: _b1.valid && _b1.text == "1" ? "#ff0000" : style.borderColor
-    property string c2: _b2.valid && _b2.text == "1" ? "#ff0000" : style.borderColor
-    property string c3: _b3.valid && _b3.text == "1" ? "#ff0000" : style.borderColor
-    property string c4: _b4.valid && _b4.text == "1" ? "#ff0000" : style.borderColor
-    property string c5: _b5.valid && _b5.text == "1" ? "#ff0000" : style.borderColor
-    property string c6: _b6.valid && _b6.text == "1" ? "#ff0000" : style.borderColor
-    property string c7: _b7.valid && _b7.text == "1" ? "#ff0000" : style.borderColor
-    property string c8: _b8.valid && _b8.text == "1" ? "#ff0000" : style.borderColor
-    property string c9: _b9.valid && _b9.text == "1" ? "#ff0000" : style.borderColor
-    property string c10: _b10.valid && _b10.text == "1" ? "#ff0000" : style.borderColor
-    property string c11: _b11.valid && _b11.text == "1" ? "#ff0000" : style.borderColor
-    property string c12: _b12.valid && _b12.text == "1" ? "#ff0000" : style.borderColor
-    property string c13: _b13.valid && _b13.text == "1" ? "#ff0000" : style.borderColor
-    property string c14: _b14.valid && _b14.text == "1" ? "#ff0000" : style.borderColor
-    property string c15: _b15.valid && _b15.text == "1" ? "#ff0000" : style.borderColor
-    property string c16: _b16.valid && _b16.text == "1" ? "#ff0000" : style.borderColor
-    property string c17: _b17.valid && _b17.text == "1" ? "#ff0000" : style.borderColor
-    property string c18: _b18.valid && _b18.text == "1" ? "#ff0000" : style.borderColor
-    property string c19: _b19.valid && _b19.text == "1" ? "#ff0000" : style.borderColor
-    property string c20: _b20.valid && _b20.text == "1" ? "#ff0000" : style.borderColor
-    property string c21: _b21.valid && _b21.text == "1" ? "#ff0000" : style.borderColor
-    property string c22: _b22.valid && _b22.text == "1" ? "#ff0000" : style.borderColor
-    property string c23: _b23.valid && _b23.text == "1" ? "#ff0000" : style.borderColor
-    property string c24: _b24.valid && _b24.text == "1" ? "#ff0000" : style.borderColor
+
+    property string c1: _b1.valid && _b1.text == "1" ? (_batteryMinCellVoltage.value == volt1.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c2: _b2.valid && _b2.text == "1" ? (_batteryMinCellVoltage.value == volt2.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c3: _b3.valid && _b3.text == "1" ? (_batteryMinCellVoltage.value == volt3.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c4: _b4.valid && _b4.text == "1" ? (_batteryMinCellVoltage.value == volt4.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c5: _b5.valid && _b5.text == "1" ? (_batteryMinCellVoltage.value == volt5.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c6: _b6.valid && _b6.text == "1" ? (_batteryMinCellVoltage.value == volt6.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c7: _b7.valid && _b7.text == "1" ? (_batteryMinCellVoltage.value == volt7.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c8: _b8.valid && _b8.text == "1" ? (_batteryMinCellVoltage.value == volt8.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c9: _b9.valid && _b9.text == "1" ? (_batteryMinCellVoltage.value == volt9.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c10: _b10.valid && _b10.text == "1" ? (_batteryMinCellVoltage.value == volt10.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c11: _b11.valid && _b11.text == "1" ? (_batteryMinCellVoltage.value == volt11.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c12: _b12.valid && _b12.text == "1" ? (_batteryMinCellVoltage.value == volt12.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c13: _b13.valid && _b13.text == "1" ? (_batteryMinCellVoltage.value == volt13.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c14: _b14.valid && _b14.text == "1" ? (_batteryMinCellVoltage.value == volt14.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c15: _b15.valid && _b15.text == "1" ? (_batteryMinCellVoltage.value == volt15.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c16: _b16.valid && _b16.text == "1" ? (_batteryMinCellVoltage.value == volt16.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c17: _b17.valid && _b17.text == "1" ? (_batteryMinCellVoltage.value == volt17.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c18: _b18.valid && _b18.text == "1" ? (_batteryMinCellVoltage.value == volt18.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c19: _b19.valid && _b19.text == "1" ? (_batteryMinCellVoltage.value == volt19.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c20: _b20.valid && _b20.text == "1" ? (_batteryMinCellVoltage.value == volt20.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c21: _b21.valid && _b21.text == "1" ? (_batteryMinCellVoltage.value == volt21.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c22: _b22.valid && _b22.text == "1" ? (_batteryMinCellVoltage.value == volt22.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c23: _b23.valid && _b23.text == "1" ? (_batteryMinCellVoltage.value == volt23.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+    property string c24: _b24.valid && _b24.text == "1" ? (_batteryMinCellVoltage.value == volt24.value ? "#6ea7e4" : "#cf5151") : style.borderColor
+
+	VBusItem {
+		id: _batteryCellVoltageSum
+		bind: service.path("/Voltages/Sum")
+	}
+	VBusItem {
+		id: _batteryCellVoltageDiff
+		bind: service.path("/Voltages/Diff")
+	}
+	VBusItem {
+		id: _batteryMinCellVoltage
+		bind: service.path("/System/MinCellVoltage")
+	}
+	VBusItem {
+		id: _batteryMaxCellVoltage
+		bind: service.path("/System/MaxCellVoltage")
+	}
+
     title: service.description + " | Cell Voltages"
 
     model: VisibleItemModel {
 
         MbItemRow {
-            description: qsTr("Cells Sum")
+            description: qsTr("Sum / Diff / Max / Min")
+            height: 30
             values: [
-                MbTextBlock { item { bind: service.path("/Voltages/Sum") } width: 70; height: 25 }
+                MbTextBlock { item { bind: service.path("/Voltages/Sum") } width: 70; height: 20 },
+                MbTextBlock { item { bind: service.path("/Voltages/Diff") } width: 70; height: 20 },
+                MbTextBlock { item { bind: service.path("/System/MaxCellVoltage") } width: 70; height: 20 },
+                MbTextBlock { item { bind: service.path("/System/MinCellVoltage") } width: 70; height: 20 }
             ]
         }
         MbItemRow {
-            description: qsTr("Cells (Min/Max/Diff)")
-            values: [
-                MbTextBlock { item { bind: service.path("/System/MinCellVoltage") } width: 70; height: 25 },
-                MbTextBlock { item { bind: service.path("/System/MaxCellVoltage") } width: 70; height: 25 },
-                MbTextBlock { item { bind: service.path("/Voltages/Diff") } width: 70; height: 25 }
-            ]
-        }
-        MbItemRow {
-            description: qsTr("Cells (1/2/3/4)")
-            height: 22
+            description: qsTr("Cell 1 / 2 / 3 / 4")
+            height: 30
             values: [
                 MbTextBlock { item: volt1; width: 70; height: 20; color: c1 },
                 MbTextBlock { item: volt2; width: 70; height: 20; color: c2 },
@@ -107,8 +123,8 @@ MbPage {
             ]
         }
         MbItemRow {
-            description: qsTr("Cells (5/6/7/8)")
-            height: 22
+            description: qsTr("Cell 5 / 6 / 7 / 8")
+            height: 30
             show: volt5.valid
             values: [
                 MbTextBlock { item: volt5; width: 70; height: 20; color: c5 },
@@ -118,8 +134,8 @@ MbPage {
             ]
         }
         MbItemRow {
-            description: qsTr("Cells (9/10/11/12)")
-            height: 22
+            description: qsTr("Cell 9 / 10 / 11 / 12")
+            height: 30
             show: volt9.valid
             values: [
                 MbTextBlock { item: volt9; width: 70; height: 20; color: c9 },
@@ -129,8 +145,8 @@ MbPage {
             ]
         }
         MbItemRow {
-            description: qsTr("Cells (13/14/15/16)")
-            height: 22
+            description: qsTr("Cell 13 / 14 / 15 / 16")
+            height: 30
             show: volt13.valid
             values: [
                 MbTextBlock { item: volt13; width: 70; height: 20; color: c13 },
@@ -140,8 +156,8 @@ MbPage {
             ]
         }
         MbItemRow {
-            description: qsTr("Cells (17/18/19/20)")
-            height: 22
+            description: qsTr("Cell 17 / 18 / 19 / 20")
+            height: 30
             show: volt17.valid
             values: [
                 MbTextBlock { item: volt17; width: 70; height: 20; color: c17 },
@@ -151,8 +167,8 @@ MbPage {
             ]
         }
         MbItemRow {
-            description: qsTr("Cells (21/22/23/24)")
-            height: 22
+            description: qsTr("Cell 21 / 22 / 23 / 24")
+            height: 30
             show: volt21.valid
             values: [
                 MbTextBlock { item: volt21; width: 70; height: 20; color: c21 },

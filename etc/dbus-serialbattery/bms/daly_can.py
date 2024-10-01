@@ -13,7 +13,6 @@ from utils import (
     logger,
     MAX_BATTERY_CHARGE_CURRENT,
     MAX_BATTERY_DISCHARGE_CURRENT,
-    MAX_CELL_VOLTAGE,
     MIN_CELL_VOLTAGE,
 )
 from struct import unpack_from
@@ -162,9 +161,6 @@ class Daly_Can(Battery):
 
         if self.cell_count == 0:
             return False
-
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
 
         self.hardware_version = "DalyBMS " + str(self.cell_count) + "S"
         logger.info(self.hardware_version)

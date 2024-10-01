@@ -6,7 +6,6 @@
 
 from battery import Protection, Battery, Cell
 from utils import logger
-import utils
 import serial
 import sys
 
@@ -69,18 +68,21 @@ class Seplos(Battery):
     @staticmethod
     def encode_cmd(address: int, cid2: int, info: bytes = b"") -> bytes:
         """encodes a command sent to a battery (cid1=0x46)"""
-        cid1 = 0x46
+        try:
+            cid1 = 0x46
 
-        info_length = Seplos.get_info_length(info)
+            info_length = Seplos.get_info_length(info)
 
-        frame = "{:02X}{:02X}{:02X}{:02X}{:04X}".format(
-            0x20, address, cid1, cid2, info_length
-        ).encode()
-        frame += info
+            frame = "{:02X}{:02X}{:02X}{:02X}{:04X}".format(
+                0x20, address, cid1, cid2, info_length
+            ).encode()
+            frame += info
 
-        checksum = Seplos.get_checksum(frame)
-        encoded = b"~" + frame + "{:04X}".format(checksum).encode() + b"\r"
-        return encoded
+            checksum = Seplos.get_checksum(frame)
+            encoded = b"~" + frame + "{:04X}".format(checksum).encode() + b"\r"
+            return encoded
+        except Exception:
+            return b""
 
     def test_connection(self):
         """
@@ -122,9 +124,8 @@ class Seplos(Battery):
         # BMS does not provide max charge-/discharge, so we have to use hardcoded/config values
         # self.max_battery_charge_current = utils.MAX_BATTERY_CHARGE_CURRENT
         # self.max_battery_discharge_current = utils.MAX_BATTERY_DISCHARGE_CURRENT
-
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
+        if not self.read_status_data():
+            return False
 
         # init the cell array
         for _ in range(self.cell_count):

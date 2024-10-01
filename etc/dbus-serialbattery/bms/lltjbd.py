@@ -1,7 +1,15 @@
 # -*- coding: utf-8 -*-
 from battery import Protection, Battery, Cell
-from utils import is_bit_set, read_serial_data, logger
-import utils
+from utils import (
+    bytearray_to_string,
+    is_bit_set,
+    kelvin_to_celsius,
+    read_serial_data,
+    logger,
+    ZERO_CHAR,
+    SOC_LOW_ALARM,
+    SOC_LOW_WARNING,
+)
 from struct import unpack_from, pack
 import struct
 import sys
@@ -484,7 +492,7 @@ class LltJbd(Battery):
         return self.read_gen_data() and self.read_cell_data()
 
     def to_protection_bits(self, byte_data):
-        tmp = bin(byte_data)[2:].rjust(13, utils.ZERO_CHAR)
+        tmp = bin(byte_data)[2:].rjust(13, ZERO_CHAR)
 
         self.protection.high_voltage = 2 if is_bit_set(tmp[10]) else 0
         self.protection.low_voltage = 2 if is_bit_set(tmp[9]) else 0
@@ -497,9 +505,7 @@ class LltJbd(Battery):
 
         # Software implementations for low soc
         self.protection.low_soc = (
-            2
-            if self.soc < utils.SOC_LOW_ALARM
-            else 1 if self.soc < utils.SOC_LOW_WARNING else 0
+            2 if self.soc < SOC_LOW_ALARM else 1 if self.soc < SOC_LOW_WARNING else 0
         )
 
         # extra protection flags for LltJbd
@@ -517,7 +523,7 @@ class LltJbd(Battery):
                 self.cells.append(Cell(False))
 
         # get up to the first 16 cells
-        tmp = bin(byte_data)[2:].rjust(min(self.cell_count, 16), utils.ZERO_CHAR)
+        tmp = bin(byte_data)[2:].rjust(min(self.cell_count, 16), ZERO_CHAR)
         # 4 cells
         # tmp = 0101
         # 16 cells
@@ -528,7 +534,7 @@ class LltJbd(Battery):
         # [cell1, cell2, cell3, ...]
 
         if self.cell_count > 16:
-            tmp2 = bin(byte_data_high)[2:].rjust(self.cell_count - 16, utils.ZERO_CHAR)
+            tmp2 = bin(byte_data_high)[2:].rjust(self.cell_count - 16, ZERO_CHAR)
             # tmp = 1100110011001100
             tmp_reversed = tmp_reversed + list(reversed(tmp2))
             # print(tmp_reversed) --> [
@@ -551,18 +557,18 @@ class LltJbd(Battery):
         for c in self.cells:
             self.cells.remove(c)
         # get up to the first 16 cells
-        tmp = bin(byte_data)[2:].rjust(min(self.cell_count, 16), utils.ZERO_CHAR)
+        tmp = bin(byte_data)[2:].rjust(min(self.cell_count, 16), ZERO_CHAR)
         for bit in reversed(tmp):
             self.cells.append(Cell(is_bit_set(bit)))
         # get any cells above 16
         if self.cell_count > 16:
-            tmp = bin(byte_data_high)[2:].rjust(self.cell_count - 16, utils.ZERO_CHAR)
+            tmp = bin(byte_data_high)[2:].rjust(self.cell_count - 16, ZERO_CHAR)
             for bit in reversed(tmp):
                 self.cells.append(Cell(is_bit_set(bit)))
         """
 
     def to_fet_bits(self, byte_data):
-        tmp = bin(byte_data)[2:].rjust(2, utils.ZERO_CHAR)
+        tmp = bin(byte_data)[2:].rjust(2, ZERO_CHAR)
         self.charge_fet = is_bit_set(tmp[1])
         self.discharge_fet = is_bit_set(tmp[0])
 
@@ -612,8 +618,6 @@ class LltJbd(Battery):
         )
         self.to_fet_bits(fet)
         self.to_protection_bits(protection)
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         # 0 = MOS, 1 = temp 1, 2 = temp 2
         for t in range(self.temp_sensors):
@@ -627,9 +631,9 @@ class LltJbd(Battery):
             temperature = unpack_from(">H", gen_data, 23 + (2 * t))[0]
             # if there is only one sensor, use it as the main temperature sensor
             if self.temp_sensors == 1:
-                self.to_temp(1, utils.kelvin_to_celsius(temperature / 10))
+                self.to_temp(1, kelvin_to_celsius(temperature / 10))
             else:
-                self.to_temp(t, utils.kelvin_to_celsius(temperature / 10))
+                self.to_temp(t, kelvin_to_celsius(temperature / 10))
 
         return True
 
@@ -667,7 +671,7 @@ class LltJbd(Battery):
 
         start, op, status, payload_length = unpack_from("BBBB", data)
 
-        logger.debug("bytearray: " + utils.bytearray_to_string(data))
+        logger.debug("bytearray: " + bytearray_to_string(data))
 
         if start != 0xDD:
             logger.error(

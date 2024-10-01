@@ -7,7 +7,6 @@
 # avoid importing wildcards, remove unused imports
 from battery import Battery, Cell
 from utils import is_bit_set, read_serial_data, logger
-import utils
 from struct import unpack_from
 import sys
 
@@ -117,10 +116,6 @@ class BatteryTemplate(Battery):
         # serial number of the battery (str)
         self.serial_number = VALUE_FROM_BMS
         """
-
-        # init battery voltages
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         # init the cell array once
         if len(self.cells) == 0:

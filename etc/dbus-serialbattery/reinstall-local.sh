@@ -96,6 +96,12 @@ fi
 # TODO: system should not remain in read-only mode
 bash /opt/victronenergy/swupdate-scripts/remount-rw.sh
 
+# fix permissions
+chmod +x /data/etc/dbus-serialbattery/*.sh
+chmod +x /data/etc/dbus-serialbattery/*.py
+chmod +x /data/etc/dbus-serialbattery/service/run
+chmod +x /data/etc/dbus-serialbattery/service/log/run
+
 # install
 rm -rf /opt/victronenergy/service/dbus-serialbattery
 rm -rf /opt/victronenergy/service-templates/dbus-serialbattery

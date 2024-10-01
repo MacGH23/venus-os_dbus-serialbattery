@@ -111,8 +111,9 @@ class HeltecModbus(Battery):
         )
 
     def get_settings(self):
-        self.max_battery_voltage = self.max_cell_voltage * self.cell_count
-        self.min_battery_voltage = self.min_cell_voltage * self.cell_count
+        # After successful connection get_settings() will be called to set up the battery
+        # Set the current limits, populate cell count, etc
+        # Return True if success, False for failure
 
         return True
 

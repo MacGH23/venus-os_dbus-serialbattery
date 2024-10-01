@@ -62,19 +62,26 @@
   * `BULK_AFTER_DAYS` -> `SOC_RESET_AFTER_DAYS`
 
 
-## v1.4.x
+## v1.5.x
+* Added: Daly BMS - Connect multiple BMS to the same RS485 port by @CaptKrisp
+
+## v1.4.20240928
 
 * Added: `History()` class that holds all BMS history values by @mr-manuel
 * Added: Automatically increase polling time, if polling take too long by @mr-manuel
+* Added: Connection Information field which was recently added by Victron on the details page by @mr-manuel
 * Added: Daren BMS with https://github.com/mr-manuel/venus-os_dbus-serialbattery/pull/65 by @cpttinkering
 * Added: Multiple BMS on one USB to RS485/Modbus adapter now possible. The BMS needs to be able to set different addresses to each battery by @mr-manuel
 * Added: Send telemetry data to see which driver versions and BMS are used the most. Can be disabled in the `config.ini` by @mr-manuel
 * Added: Show error in log, if an unknown BMS type was added in the `config.ini` by @mr-manuel
+* Changed: Battery connection loss: Big improvements on handling the situation, fixed battery connection restore without driver restart, improved behaviour when connection is lost, added config options by @mr-manuel
 * Changed: Call `get_settings()` in `test_connection()` for all battery classes, removed `get_settings()` call from `setup_vedbus()` by @mr-manuel
 * Changed: Daly BMS - Fixed issues where faulty readings set values to None by @mr-manuel
 * Changed: Fixed alarms for some BMS and cleaned up `Protection()` class
 * Changed: Fixed how `velib_python` was integrated in this driver by @mr-manuel
 * Changed: Fixed problem with battery status and error code by @mr-manuel
+* Changed: GUIv1 cell voltage page design by @mr-manuel
+* Changed: JKBMS - Fixed issues where faulty readings set values to None by @mr-manuel
 * Changed: JKBMS BLE - Fixes wrong max battery voltage https://github.com/Louisvdw/dbus-serialbattery/issues/1094 by @mr-manuel
 * Changed: JKBMS PB Model fixes by @KoljaWindeler
 * Changed: LLT/JBS BMS - Fix bug in SOC calculation and use SOC comming from BMS. Fixes https://github.com/mr-manuel/venus-os_dbus-serialbattery/issues/47 by @mr-manuel

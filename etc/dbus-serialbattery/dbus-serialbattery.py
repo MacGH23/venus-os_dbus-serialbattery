@@ -117,6 +117,11 @@ def main():
         # since the first polls are always slower
         if loop_count > 5 and runtime > battery[first_key].poll_interval / 1000:
             new_poll_interval = math.ceil(runtime + 0.8) * 1000
+
+            # limit max poll interval to 60 seconds
+            if new_poll_interval > 60000:
+                new_poll_interval = 60000
+
             battery[first_key].poll_interval = new_poll_interval
             logger.warning(
                 f"Polling took too long. Set to {new_poll_interval/1000:.3f} s"
@@ -255,7 +260,7 @@ def main():
                 logger.info("Connection established to " + testbms.__class__.__name__)
                 battery[0] = testbms
 
-    elif port.startswith("can"):
+    elif port.startswith("can") or port.startswith("vecan"):
         """
         Import CAN classes only, if it's a can port, else the driver won't start due to missing python modules
         This prevent problems when using the driver only with a serial connection

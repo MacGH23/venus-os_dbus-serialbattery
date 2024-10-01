@@ -1,7 +1,14 @@
 # -*- coding: utf-8 -*-
 from battery import Battery, Cell
-from utils import open_serial_port, logger
-import utils
+from utils import (
+    bytearray_to_string,
+    open_serial_port,
+    logger,
+    AUTO_RESET_SOC,
+    BATTERY_CAPACITY,
+    INVERT_CURRENT_MEASUREMENT,
+    MIN_CELL_VOLTAGE,
+)
 from struct import unpack_from, pack_into
 from time import sleep, time
 from datetime import datetime
@@ -197,7 +204,7 @@ class Daly(Battery):
 
                 self.write_charge_discharge_mos(ser)
 
-                if utils.AUTO_RESET_SOC:
+                if AUTO_RESET_SOC:
                     self.update_soc_on_bms(ser)
 
         except OSError:
@@ -230,7 +237,7 @@ class Daly(Battery):
 
         try:
             (
-                self.cell_count,
+                cell_count,
                 self.temp_sensors,
                 self.charger_connected,
                 self.load_connected,
@@ -240,17 +247,21 @@ class Daly(Battery):
         except Exception:
             return False
 
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
+        if cell_count > 0:
+            self.cell_count = cell_count
 
-        self.hardware_version = (
-            "DalyBMS "
-            + str(self.cell_count)
-            + "S"
-            + (" (" + self.production + ")" if self.production else "")
-        )
-        logger.debug(self.hardware_version)
-        return True
+            self.hardware_version = (
+                "DalyBMS "
+                + str(self.cell_count)
+                + "S"
+                + (" (" + self.production + ")" if self.production else "")
+            )
+
+            logger.debug(self.hardware_version)
+
+            return True
+
+        return False
 
     def read_soc_data(self, ser):
 
@@ -273,7 +284,7 @@ class Daly(Battery):
             current = (
                 (current - self.CURRENT_ZERO_CONSTANT)
                 / -10
-                * utils.INVERT_CURRENT_MEASUREMENT
+                * INVERT_CURRENT_MEASUREMENT
             )
             soc = soc / 10
 
@@ -449,7 +460,7 @@ class Daly(Battery):
             self.cells_volts_data_lastreadbad = False
 
         frameCell = [0, 0, 0]
-        lowMin = utils.MIN_CELL_VOLTAGE / 2
+        lowMin = MIN_CELL_VOLTAGE / 2
         frame = 0
 
         if len(self.cells) != self.cell_count:
@@ -557,7 +568,7 @@ class Daly(Battery):
             self.capacity = capacity / 1000
             return True
         else:
-            self.capacity = utils.BATTERY_CAPACITY if not None else 0
+            self.capacity = BATTERY_CAPACITY if not None else 0
             return False
 
     def read_production_date(self, ser):
@@ -579,7 +590,7 @@ class Daly(Battery):
             return False
 
         battery_code = ""
-        # logger.warning("data " + utils.bytearray_to_string(cells_volts_data))
+        # logger.warning("data " + bytearray_to_string(cells_volts_data))
 
         for i in range(5):
             nr, part = unpack_from(">B7s", data, i * 8)
@@ -777,7 +788,7 @@ class Daly(Battery):
         reply = ser.read_until(b"\xA5")
         if not reply or b"\xA5" not in reply:
             logger.debug(
-                f"read_sentence {utils.bytearray_to_string(expected_reply)}: no sentence start received"
+                f"read_sentence {bytearray_to_string(expected_reply)}: no sentence start received"
             )
             return False
 
@@ -790,7 +801,7 @@ class Daly(Battery):
             time_run = time() - time_start
             if time_run > timeout:
                 logger.debug(
-                    f"read_sentence {utils.bytearray_to_string(expected_reply)}: timeout"
+                    f"read_sentence {bytearray_to_string(expected_reply)}: timeout"
                 )
                 return False
 
@@ -800,18 +811,18 @@ class Daly(Battery):
         except Exception:
             return False
 
-        # logger.info(f"reply: {utils.bytearray_to_string(reply)}")  # debug
+        # logger.info(f"reply: {bytearray_to_string(reply)}")  # debug
 
-        if id != 1 or length != 8 or cmd != expected_reply[0]:
+        if (63 + id) != self.address[0] or length != 8 or cmd != expected_reply[0]:
             logger.debug(
-                f"read_sentence {utils.bytearray_to_string(expected_reply)}: wrong header"
+                f"read_sentence {bytearray_to_string(expected_reply)}: wrong header"
             )
             return False
 
         chk = unpack_from(">B", reply, 12)[0]
         if sum(reply[:12]) & 0xFF != chk:
             logger.debug(
-                f"read_sentence {utils.bytearray_to_string(expected_reply)}: wrong checksum"
+                f"read_sentence {bytearray_to_string(expected_reply)}: wrong checksum"
             )
             return False
 

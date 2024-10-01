@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from battery import Battery, Cell
-from utils import is_bit_set, read_serial_data, logger
-import utils
+from utils import bytearray_to_string, is_bit_set, read_serial_data, logger, ZERO_CHAR
 from struct import unpack_from
 from re import sub
 import sys
@@ -56,8 +55,6 @@ class Jkbms(Battery):
         # After successful connection get_settings() will be called to set up the battery
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         # init the cell array once
         # if len(self.cells) == 0:
@@ -100,31 +97,43 @@ class Jkbms(Battery):
         )[0]
 
         offset = cellbyte_count + 30
-        self.cell_count = unpack_from(
-            ">H", self.get_data(status_data, b"\x8A", offset, 2)
-        )[0]
+        cell_count = unpack_from(">H", self.get_data(status_data, b"\x8A", offset, 2))[
+            0
+        ]
+        # check if the cell count is valid
+        if cell_count > 0:
+            self.cell_count = cell_count
 
         if cellbyte_count == 3 * self.cell_count and self.cell_count == len(self.cells):
             offset = 1
             celldata = self.get_data(status_data, b"\x79", offset, 1 + cellbyte_count)
+
             for c in range(self.cell_count):
-                self.cells[c].voltage = (
-                    unpack_from(">xH", celldata, c * 3 + 1)[0] / 1000
-                )
+                cell_voltage = unpack_from(">xH", celldata, c * 3 + 1)[0] / 1000
+
+                # check if the cell voltage is valid
+                if cell_voltage > 0:
+                    self.cells[c].voltage = cell_voltage
 
         # MOSFET temperature
         offset = cellbyte_count + 3
         temp_mos = unpack_from(">H", self.get_data(status_data, b"\x80", offset, 2))[0]
-        self.to_temp(0, temp_mos if temp_mos < 99 else (100 - temp_mos))
+        # check if the mosfet temperature is valid
+        if temp_mos >= 0:
+            self.to_temp(0, temp_mos if temp_mos < 99 else (100 - temp_mos))
 
         # Temperature sensors
         offset = cellbyte_count + 6
         temp1 = unpack_from(">H", self.get_data(status_data, b"\x81", offset, 2))[0]
+        # check if the temperature is valid
+        if temp1 >= 0:
+            self.to_temp(1, temp1 if temp1 < 99 else (100 - temp1))
 
         offset = cellbyte_count + 9
         temp2 = unpack_from(">H", self.get_data(status_data, b"\x82", offset, 2))[0]
-        self.to_temp(1, temp1 if temp1 < 99 else (100 - temp1))
-        self.to_temp(2, temp2 if temp2 < 99 else (100 - temp2))
+        # check if the temperature is valid
+        if temp2 >= 0:
+            self.to_temp(2, temp2 if temp2 < 99 else (100 - temp2))
 
         offset = cellbyte_count + 12
         voltage = unpack_from(">H", self.get_data(status_data, b"\x83", offset, 2))[0]
@@ -140,33 +149,46 @@ class Jkbms(Battery):
 
         # Continued discharge current
         offset = cellbyte_count + 66
-        self.max_battery_discharge_current = float(
+        max_battery_discharge_current = float(
             unpack_from(">H", self.get_data(status_data, b"\x97", offset, 2))[0]
         )
+        # check if the max discharge current is valid
+        if max_battery_discharge_current >= 0:
+            self.max_battery_discharge_current = max_battery_discharge_current
 
         # Continued charge current
         offset = cellbyte_count + 72
-        self.max_battery_charge_current = float(
+        max_battery_charge_current = float(
             unpack_from(">H", self.get_data(status_data, b"\x99", offset, 2))[0]
         )
+        # check if the max charge current is valid
+        if max_battery_charge_current >= 0:
+            self.max_battery_charge_current = max_battery_charge_current
 
         # the JKBMS resets to
         # 95% SoC, if all cell voltages are above or equal to OVPR (Over Voltage Protection Recovery)
         # 100% Soc, if all cell voltages are above or equal to OVP (Over Voltage Protection)
         offset = cellbyte_count + 18
-        self.soc = unpack_from(">B", self.get_data(status_data, b"\x85", offset, 1))[0]
+        soc = unpack_from(">B", self.get_data(status_data, b"\x85", offset, 1))[0]
+        # check if the soc is valid
+        if soc >= 0 and soc <= 100:
+            self.soc = soc
 
         offset = cellbyte_count + 22
-        self.history.charge_cycles = unpack_from(
+        charge_cycles = unpack_from(
             ">H", self.get_data(status_data, b"\x87", offset, 2)
         )[0]
+        # check if the charge cycles are valid
+        if charge_cycles >= 0:
+            self.history.charge_cycles = charge_cycles
 
         # offset = cellbyte_count + 25
         # self.capacity_remain = unpack_from('>L', self.get_data(status_data, b'\x89', offset, 4))[0]
         offset = cellbyte_count + 121
-        self.capacity = unpack_from(
-            ">L", self.get_data(status_data, b"\xAA", offset, 4)
-        )[0]
+        capacity = unpack_from(">L", self.get_data(status_data, b"\xAA", offset, 4))[0]
+        # check if the capacity is valid
+        if capacity >= 0:
+            self.capacity = capacity
 
         offset = cellbyte_count + 33
         self.to_protection_bits(
@@ -248,7 +270,7 @@ class Jkbms(Battery):
         return self.unique_identifier_tmp
 
     def to_fet_bits(self, byte_data):
-        tmp = bin(byte_data)[2:].rjust(3, utils.ZERO_CHAR)
+        tmp = bin(byte_data)[2:].rjust(3, ZERO_CHAR)
         self.charge_fet = is_bit_set(tmp[2])
         self.discharge_fet = is_bit_set(tmp[1])
         self.balancing = is_bit_set(tmp[0])
@@ -302,7 +324,7 @@ class Jkbms(Battery):
         Bit 13:309_B protection: 1 alarm, 0 nomal
         """
         pos = 13
-        tmp = bin(byte_data)[15 - pos :].rjust(pos + 1, utils.ZERO_CHAR)
+        tmp = bin(byte_data)[15 - pos :].rjust(pos + 1, ZERO_CHAR)
         # logger.debug(tmp)
 
         # low capacity alarm
@@ -369,7 +391,7 @@ class Jkbms(Battery):
 
         s = sum(data[0:-4])
 
-        logger.debug("bytearray: " + utils.bytearray_to_string(data))
+        logger.debug("bytearray: " + bytearray_to_string(data))
 
         if start == 0x4E57 and end == 0x68 and s == crc_lo:
             return data[10 : length - 7]

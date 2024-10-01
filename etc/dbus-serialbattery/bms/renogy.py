@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from battery import Battery, Cell
-from utils import read_serial_data, unpack_from, logger
-import utils
+from utils import bytearray_to_string, read_serial_data, unpack_from, logger
 from struct import unpack
 import struct
 import sys
@@ -49,7 +48,7 @@ class Renogy(Battery):
             return self.serial_number
         else:
             return self.port + (
-                "__" + utils.bytearray_to_string(self.address).replace("\\", "0")
+                "__" + bytearray_to_string(self.address).replace("\\", "0")
                 if self.address is not None
                 else ""
             )
@@ -87,8 +86,6 @@ class Renogy(Battery):
         # After successful connection get_settings() will be called to set up the battery
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         return True
 

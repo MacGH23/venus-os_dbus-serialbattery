@@ -82,8 +82,6 @@ class Revov(Battery):
         # Set the current limits, populate cell count, etc
         # Return True if success, False for failure
 
-        self.max_battery_voltage = MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = MIN_CELL_VOLTAGE * self.cell_count
         # Need to fix to use correct value will do later.  hard coded for now
         for c in range(self.cell_count):
             self.cells.append(Cell(False))

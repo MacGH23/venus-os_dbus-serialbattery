@@ -8,7 +8,6 @@ from battery import Battery, Cell
 # from batters import Protection
 from utils import logger, read_serial_data
 from struct import unpack_from
-import utils
 import sys
 
 #    Author: Pfitz /
@@ -133,9 +132,6 @@ class EG4_LL(Battery):
         # self.MIN_CELL_VOLTAGE = int.from_bytes(config_results[35:37], "big")/1000
         # self.MAX_CELL_VOLTAGE = int.from_bytes(config_results[47:49], "big")/1000
         # self.FLOAT_CELL_VOLTAGE = MAX_CELL_VOLTAGE - .9
-
-        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
 
         # self.balancer_voltage = int.from_bytes(config_results[25:27], "big")/1000
         # self.balancer_current_delta = int.from_bytes(config_results[27:29], "big")/1000

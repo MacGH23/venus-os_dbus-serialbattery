@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from battery import Battery, Cell
 from typing import Callable
-from utils import logger
-import utils
+from utils import logger, AUTO_RESET_SOC
 from time import sleep, time
 from bms.jkbms_brn import Jkbms_Brn
 import os
@@ -94,8 +93,6 @@ class Jkbms_Ble(Battery):
         self.cell_count = st["cell_count"]
         self.max_battery_charge_current = st["max_charge_current"]
         self.max_battery_discharge_current = st["max_discharge_current"]
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = st["cell_uvp"] * self.cell_count
 
         # Persist initial OVP and OPVR settings of JK BMS BLE
         if self.jk.ovp_initial_voltage is None or self.jk.ovpr_initial_voltage is None:
@@ -287,7 +284,7 @@ class Jkbms_Ble(Battery):
         return 1 if self.balancing else 0
 
     def trigger_soc_reset(self):
-        if utils.AUTO_RESET_SOC:
+        if AUTO_RESET_SOC:
             self.jk.max_cell_voltage = self.get_max_cell_voltage()
             self.jk.trigger_soc_reset = True
         return

@@ -6,7 +6,6 @@
 
 from battery import Battery, Cell
 from utils import kelvin_to_celsius, read_serial_data, logger
-import utils
 from struct import unpack_from
 import sys
 
@@ -74,9 +73,6 @@ class Sinowealth(Battery):
 
         if self.cell_count is None:
             self.read_pack_config_data()
-
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         self.hardware_version = "Daly/Sinowealth BMS " + str(self.cell_count) + "S"
         logger.debug(self.hardware_version)

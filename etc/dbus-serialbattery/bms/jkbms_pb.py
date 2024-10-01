@@ -5,7 +5,6 @@
 
 from battery import Battery, Cell
 from utils import read_serial_data, logger
-import utils
 from struct import unpack_from
 import sys
 
@@ -157,9 +156,6 @@ class Jkbms_pb(Battery):
         logger.debug("Vendor ID: " + str(vendor_id))
         logger.debug("HW Version: " + str(hw_version))
         logger.debug("SW Version: " + str(sw_version))
-
-        self.max_battery_voltage = utils.MAX_CELL_VOLTAGE * self.cell_count
-        self.min_battery_voltage = utils.MIN_CELL_VOLTAGE * self.cell_count
 
         # init the cell array
         for _ in range(self.cell_count):

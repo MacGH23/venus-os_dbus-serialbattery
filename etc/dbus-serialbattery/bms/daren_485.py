@@ -9,7 +9,6 @@
 # avoid importing wildcards, remove unused imports
 from battery import Battery, Cell
 from utils import open_serial_port, logger
-import utils
 from time import sleep
 from struct import unpack
 from re import findall
@@ -79,19 +78,12 @@ class Daren485(Battery):
                         result = self.get_serial(ser)
 
                         result = result and self.get_cells_params(ser)
+
                         if result:
                             # init the cell array once
                             if len(self.cells) == 0:
                                 for _ in range(self.cell_count):
                                     self.cells.append(Cell(False))
-
-                            # init battery voltages
-                            self.max_battery_voltage = (
-                                utils.MAX_CELL_VOLTAGE * self.cell_count
-                            )
-                            self.min_battery_voltage = (
-                                utils.MIN_CELL_VOLTAGE * self.cell_count
-                            )
 
                         result = result and self.get_realtime_data(ser)
 
@@ -107,10 +99,11 @@ class Daren485(Battery):
             logger.warning("Couldn't open serial port")
 
         if not result:  # TROUBLESHOOTING for no reply errors
-            logger.info(
+            logger.debug(
                 f"get_settings: result: {result}."
                 + " If you don't see this warning very often, you can ignore it."
             )
+            logger.error(">>> ERROR: No reply - returning")
 
         return result
 
@@ -179,7 +172,7 @@ class Daren485(Battery):
             else:
                 logger.error("get_serial response length error!")
         else:
-            logger.error("get_serial response error!")
+            logger.debug("get_serial response error!")
 
         return result
 
@@ -549,8 +542,8 @@ class Daren485(Battery):
         try:
             CID2 = buff[7:9]
             if self.CID2_decode(CID2) == -1:
-                logger.error("CID2_Decode error!")
-                logger.error("Buffer contents: {}".format(buff))
+                logger.debug("CID2_Decode error!")
+                logger.debug("Buffer contents: {}".format(buff))
                 return False
         except Exception as e:
             logger.error("read_response Data invalid!: {}".format(e))

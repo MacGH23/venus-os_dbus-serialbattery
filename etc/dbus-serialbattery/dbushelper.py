@@ -44,7 +44,7 @@ class DbusHelper:
         self.instance = 1
         self.settings = None
         self.error = {"count": 0, "timestamp_first": None, "timestamp_last": None}
-        self.cell_voltages_good = False
+        self.cell_voltages_good = None
         self._dbusname = (
             "com.victronenergy.battery."
             + self.battery.port[self.battery.port.rfind("/") + 1 :]
@@ -524,6 +524,7 @@ class DbusHelper:
         self._dbusservice.add_path(
             "/ErrorCode", self.battery.error_code, writeable=True
         )
+        self._dbusservice.add_path("/ConnectionInformation", "")
 
         # Create static battery info
         self._dbusservice.add_path(
@@ -810,15 +811,21 @@ class DbusHelper:
                 # reset error variables
                 self.error["count"] = 0
                 self.battery.online = True
+                self.battery.connection_info = "Connected"
 
                 # unblock charge/discharge, if it was blocked when battery went offline
                 if utils.BLOCK_ON_DISCONNECT:
                     self.battery.block_because_disconnect = False
 
+                # reset cell voltages good
+                if self.cell_voltages_good is not None:
+                    self.cell_voltages_good = None
+
             else:
                 # update error variables
                 if self.error["count"] == 0:
                     self.error["timestamp_first"] = int(time())
+
                 self.error["timestamp_last"] = int(time())
                 self.error["count"] += 1
 
@@ -827,23 +834,44 @@ class DbusHelper:
                 )
 
                 # if the battery did not update in 10 second, it's assumed to be offline
-                if time_since_first_error >= 10 and self.battery.online:
-                    self.battery.online = False
+                if time_since_first_error >= 10:
 
-                    # check if the cell voltages are good to go for some minutes
+                    if self.battery.online:
+                        # set battery offline
+                        self.battery.online = False
+
+                        # reset the battery values
+                        self.battery.init_values()
+                        logger.error(
+                            ">>> ERROR: Battery does not respond, init/reset values <<<"
+                        )
+
+                        # block charge/discharge
+                        if utils.BLOCK_ON_DISCONNECT:
+                            self.battery.block_because_disconnect = True
+
+                # check if the cell voltages are good to go for some minutes
+                if self.cell_voltages_good is None:
                     self.cell_voltages_good = (
                         True
-                        if self.battery.get_min_cell_voltage() > 3.25
-                        and self.battery.get_max_cell_voltage() < 3.35
+                        if self.battery.get_min_cell_voltage()
+                        > utils.BLOCK_ON_DISCONNECT_VOLTAGE_MIN
+                        and self.battery.get_max_cell_voltage()
+                        < utils.BLOCK_ON_DISCONNECT_VOLTAGE_MAX
                         else False
                     )
+                    logger.info(
+                        f"cell_voltages_good: {self.cell_voltages_good} - "
+                        + f"min: {self.battery.get_min_cell_voltage()} > {utils.BLOCK_ON_DISCONNECT_VOLTAGE_MIN} - "
+                        + f"max: {self.battery.get_max_cell_voltage()} < {utils.BLOCK_ON_DISCONNECT_VOLTAGE_MAX}"
+                    )
 
-                    # reset the battery values
-                    self.battery.init_values()
-
-                    # block charge/discharge
-                    if utils.BLOCK_ON_DISCONNECT:
-                        self.battery.block_because_disconnect = True
+                # set connection info
+                self.battery.connection_info = (
+                    f"Connection lost since {time_since_first_error} s, "
+                    + "disconnect at "
+                    + f"{(60 * utils.BLOCK_ON_DISCONNECT_TIMEOUT_MINUTES if self.cell_voltages_good else 60):.0f} s"
+                )
 
                 # if the battery did not update in 60 second, it's assumed to be completely failed
                 if time_since_first_error >= 60 and (
@@ -852,7 +880,11 @@ class DbusHelper:
                     loop.quit()
 
                 # if the cells are between 3.2 and 3.3 volt we can continue for some time
-                if time_since_first_error >= 60 * 20 and not utils.BLOCK_ON_DISCONNECT:
+                if (
+                    time_since_first_error
+                    >= 60 * utils.BLOCK_ON_DISCONNECT_TIMEOUT_MINUTES
+                    and not utils.BLOCK_ON_DISCONNECT
+                ):
                     loop.quit()
 
             # This is to manage CVCL
@@ -949,6 +981,7 @@ class DbusHelper:
         # https://github.com/victronenergy/veutil/blob/master/inc/veutil/ve_regs_payload.h
         # https://github.com/victronenergy/veutil/blob/master/src/qt/bms_error.cpp
         self._dbusservice["/ErrorCode"] = self.battery.error_code
+        self._dbusservice["/ConnectionInformation"] = self.battery.connection_info
 
         self._dbusservice["/History/DeepestDischarge"] = (
             self.battery.history.deepest_discharge
