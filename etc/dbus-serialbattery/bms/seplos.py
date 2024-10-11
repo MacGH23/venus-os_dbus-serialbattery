@@ -66,15 +66,17 @@ class Seplos(Battery):
         return (lchksum << 12) + lenid
 
     @staticmethod
-    def encode_cmd(address: int, cid2: int, info: bytes = b"") -> bytes:
+    def encode_cmd(address: bytes, cid2: int, info: bytes = b"") -> bytes:
         """encodes a command sent to a battery (cid1=0x46)"""
         try:
             cid1 = 0x46
 
             info_length = Seplos.get_info_length(info)
 
+            address_int = int.from_bytes(address, byteorder="big")
+
             frame = "{:02X}{:02X}{:02X}{:02X}{:04X}".format(
-                0x20, address, cid1, cid2, info_length
+                0x20, address_int, cid1, cid2, info_length
             ).encode()
             frame += info
 
@@ -82,6 +84,16 @@ class Seplos(Battery):
             encoded = b"~" + frame + "{:04X}".format(checksum).encode() + b"\r"
             return encoded
         except Exception:
+            (
+                exception_type,
+                exception_object,
+                exception_traceback,
+            ) = sys.exc_info()
+            file = exception_traceback.tb_frame.f_code.co_filename
+            line = exception_traceback.tb_lineno
+            logger.error(
+                f"Exception occurred: {repr(exception_object)} of type {exception_type} in {file} line #{line}"
+            )
             return b""
 
     def test_connection(self):

@@ -161,6 +161,7 @@ class Battery(ABC):
         self.role: str = "battery"
         self.type: str = "Generic"
         self.poll_interval: int = 1000
+        self.dbus_external_objects: dict = None
         self.online: bool = True
         self.connection_info: str = "Initializing..."
         self.hardware_version: str = None
@@ -2032,41 +2033,54 @@ class Battery(ABC):
 
         return True
 
-    def monitor_external_current(self) -> None:
+    def setup_external_current_sensor(self) -> None:
         """
-        Start monitoring the external current sensor
+        Setup external current sensor and it's dbus items
         """
-        from dbusmonitor import DbusMonitor
+        import dbus
+        import os
+        from dbus.mainloop.glib import DBusGMainLoop
+        from vedbus import VeDbusItemImport
 
         logger.info(
             "Monitoring external current using: "
             + f"{utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE}{utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH}"
         )
 
-        # ### read values from battery
-        # Why this dummy? Because DbusMonitor expects these values to be there, even though we don't
-        # need them. So just add some dummy data. This can go away when DbusMonitor is more generic.
-        dummy = {"code": None, "whenToLog": "configChange", "accessLevel": None}
-
-        # remove device name from dbus service name
-        device_splitted = utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE.split(".")
-        dbus_service = ".".join(device_splitted[:3])
-
-        dbus_tree = {
-            dbus_service: {
-                utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH: dummy,
-            }
-        }
-
-        # start monitoring
+        # setup external dbus paths
         try:
-            self._dbusmonitor = DbusMonitor(
-                dbus_tree, valueChangedCallback=self._dbus_value_changed
+            DBusGMainLoop(set_as_default=True)
+
+            # connect to the sessionbus, on a CC GX the systembus is used
+            dbus_connection = (
+                dbus.SessionBus()
+                if "DBUS_SESSION_BUS_ADDRESS" in os.environ
+                else dbus.SystemBus()
             )
+
+            # dictionary containing the different items
+            dbus_objects = {}
+
+            # check if the dbus service is available
+            is_present_in_vebus = (
+                utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE
+                in dbus_connection.list_names()
+            )
+
+            if is_present_in_vebus:
+                dbus_objects["Current"] = VeDbusItemImport(
+                    dbus_connection,
+                    utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE,
+                    utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH,
+                )
+
+                self.dbus_external_objects = dbus_objects
+
         except Exception:
             # set to None to avoid crashing, fallback to battery current
             utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE = None
             utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH = None
+            self.dbus_external_objects = None
             (
                 exception_type,
                 exception_object,
@@ -2078,18 +2092,8 @@ class Battery(ABC):
                 "Exception occurred: "
                 + f"{repr(exception_object)} of type {exception_type} in {file} line #{line}"
             )
-
-    def _dbus_value_changed(
-        self, dbusServiceName, dbusPath, dict, changes, deviceInstance
-    ):
-        # check for external current changes
-        if (
-            dbusServiceName == utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE
-            and dbusPath == utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH
-        ):
-            self.current_external = round(changes["Value"], 3)
-            logger.debug(
-                f"dbusServiceName: {dbusServiceName} - dbusPath: {dbusPath} - value: {changes['Value']}"
+            logger.error(
+                "External current sensor setup failed, fallback to internal sensor"
             )
 
     def get_current(self) -> Union[float, None]:
@@ -2097,11 +2101,14 @@ class Battery(ABC):
         Get the current from the battery.
         If an external current sensor is connected, use that value.
         """
-        if self.current_external is not None:
-            logger.debug(
-                f"current: {self.current} - current_external: {self.current_external}"
+        if self.dbus_external_objects is not None:
+            current_external = round(
+                self.dbus_external_objects["Current"].get_value(), 3
             )
-            return self.current_external
+            logger.debug(
+                f"current: {self.current} - current_external: {current_external}"
+            )
+            return current_external
         return self.current
 
     def manage_error_code(self, error_code: int = 8) -> None:

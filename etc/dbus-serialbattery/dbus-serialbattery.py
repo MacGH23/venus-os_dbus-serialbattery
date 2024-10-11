@@ -377,13 +377,13 @@ def main():
             battery[key_address].state = 10
             battery[key_address].error_code = 119
 
-    # use external current sensor if configured
+    # check, if external current sensor should be used
     if (
         utils.EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE is not None
         and utils.EXTERNAL_CURRENT_SENSOR_DBUS_PATH is not None
     ):
         for key_address in battery:
-            battery[key_address].monitor_external_current()
+            battery[key_address].setup_external_current_sensor()
 
     # Run the main loop
     try:
