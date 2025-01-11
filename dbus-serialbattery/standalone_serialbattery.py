@@ -223,7 +223,12 @@ class standalone_serialbattery:
 
         return None
 
-    def check_bms_types(self, supported_bms_types, type) -> None:
+    def get_port() -> str:
+        """
+        Not used right now
+        """
+
+    def check_bms_types(self,supported_bms_types, type) -> None:
         """
         Checks if BMS_TYPE is not empty and all specified BMS types are supported.
 
@@ -255,6 +260,7 @@ class standalone_serialbattery:
 
     def bms_open(self):
         logging.info("open serial interface")
+        port = self.devpath
         # check if BMS_TYPE is not empty and all BMS types in the list are supported
         if len(BMS_TYPE) > 0:
             for bms_type in BMS_TYPE:
@@ -268,8 +274,8 @@ class standalone_serialbattery:
 
         if self.driveroption != 0:  # no autodetect for Bluetooth, CAN and serial
             """
-            Import ble classes only, if it's a ble port, else the driver won't start due to missing python modules
-            This prevent problems when using the driver only with a serial connection
+        Import BLE classes only if it's a BLE port; otherwise, the driver won't start due to missing Python modules.
+        This prevents issues when using the driver exclusively with a serial connection.
             """
             if self.driveroption <= 3:  # bluetooth
 
@@ -285,17 +291,17 @@ class standalone_serialbattery:
                     # noqa: F401 --> ignore flake "imported but unused" error
                     from bms.litime_ble import LiTime_Ble  # noqa: F401
 
-                class_ = eval(self.devpath)
+                class_ = eval(port)
                 testbms = class_("ble_" + self.devadr.replace(":", "").lower(), 9600, self.devadr)
 
                 if testbms.test_connection():
-                    logging.info("Connection established to " + testbms.__class__.__name__)
+                    logging.info("-- Connection established to " + testbms.__class__.__name__)
                     self.battery[0] = testbms
 
             if self.driveroption == 10:  # can interface
                 """
                 Import CAN classes only if it's a CAN port; otherwise, the driver won't start due to missing Python modules.
-                This prevents issues when using the driver exclusively with a serial connection
+                This prevents issues when using the driver exclusively with a serial connection.
 
                 can: Older GX devices and Raspberry Pi with CAN hat
                 vecan: Newer Venus GX devices
@@ -310,12 +316,12 @@ class standalone_serialbattery:
                     {"bms": Jkbms_Can},
                 ]
 
-                self.expected_bms_types = [
-                    battery_type for battery_type in self.supported_bms_types if battery_type["bms"].__name__ in BMS_TYPE or len(BMS_TYPE) == 0
-                ]
+        # check if BMS_TYPE is not empty and all BMS types in the list are supported
+        check_bms_types(supported_bms_types, "can")
+
+        expected_bms_types = [battery_type for battery_type in supported_bms_types if battery_type["bms"].__name__ in BMS_TYPE or len(BMS_TYPE) == 0]
 
                 # If no BMS type is supported, use all supported BMS types
-
                 if len(self.expected_bms_types) == 0:
                     logging.warning(f"No supported CAN BMS type found in BMS_TYPE: {', '.join(BMS_TYPE)}. Using all supported BMS types.")
                     self.expected_bms_types = supported_bms_types
@@ -324,7 +330,7 @@ class standalone_serialbattery:
                 from utils_can import CanReceiverThread, CanTransportInterface
 
                 try:
-                    can_thread = CanReceiverThread.get_instance(bustype="socketcan", channel=self.devpath)
+                    can_thread = CanReceiverThread.get_instance(bustype="socketcan", channel=port)
                 except Exception as e:
                     print(f"Error: {e}")
 
@@ -337,29 +343,29 @@ class standalone_serialbattery:
                 can_transport_interface.can_message_cache_callback = can_thread.get_message_cache
                 can_transport_interface.can_bus = can_thread.can_bus
                 logging.debug("Wait shortly to make sure that all needed data is in the cache")
-                # Slowest message cycle trasmission is every 1 second, wait a bit more for the fist time to fetch all needed data
+                # Slowest message cycle trasmission is every 1 second, wait a bit more for the first time to fetch all needed data
                 sleep(2)
                 addresses = [None] if len(BATTERY_ADDRESSES) == 0 else BATTERY_ADDRESSES  # use default address, if not configured
 
                 for busspeed in [250, 500]:
                     for address in addresses:
-                        bat = self.get_battery(self.devpath, address, can_transport_interface)
+                        bat = self.get_battery(port, address, can_transport_interface)
                         if bat:
                             self.battery[address] = bat
-                            logger.info(f"Successful battery connection at {self.devpath} and this address {str(address)}")
+                            logger.info(f"Successful battery connection at {port} and this address {str(address)}")
                         else:
-                            logger.warning(f"No battery connection at {self.devpath} and this address {str(address)}")
+                            logger.warning(f"No battery connection at {port} and this address {str(address)}")
 
                     # if we've found at least 1 battery, stop the search here. otherwise retry with other bus speeds
                     if len(self.battery) > 0:
                         break
 
                     logger.info(f"Found no devices on can bus, retrying with {busspeed} kbps")
-                    can_thread.setup_can(channel=self.devpath, bitrate=busspeed, force=True)
+                    can_thread.setup_can(channel=port, bitrate=busspeed, force=True)
                     sleep(2)
 
         # SERIAL
-        else:  # Serial, modbus, ...
+        else:
             # check if BMS_TYPE is not empty and all BMS types in the list are supported
             # self.check_bms_types(supported_bms_types, "serial")
 
@@ -367,18 +373,18 @@ class standalone_serialbattery:
             # else the error throw a lot of timeouts
             sleep(1)
 
-            # check if BATTERY_ADDRESSES is not empty
+            # Check if BATTERY_ADDRESSES is not empty
             if BATTERY_ADDRESSES:
                 for address in BATTERY_ADDRESSES:
-                    found_battery = self.get_battery(self.devpath, address)
+                    found_battery = self.get_battery(port, address)
                     if found_battery:
                         self.battery[address] = found_battery
-                        logger.info(f"Successful battery connection at {self.devpath} and this address {address}")
+                        logger.info(f"Successful battery connection at {port} and this address {address}")
                     else:
-                        logger.warning(f"No battery connection at {self.devpath} and this address {address}")
+                        logger.warning(f"No battery connection at {port} and this address {address}")
             # use default address
             else:
-                self.battery[0] = self.get_battery(self.devpath)
+                self.battery[0] = self.get_battery(port)
 
         # check if at least one BMS was found
         battery_found = False
@@ -388,11 +394,7 @@ class standalone_serialbattery:
                 battery_found = True
 
         if not battery_found:
-            logging.error(
-                "ERROR >>> No battery connection at "
-                + self.devpath
-                + (" and this Modbus addresses: " + ", ".join(BATTERY_ADDRESSES) if BATTERY_ADDRESSES else "")
-            )
+            logging.error("ERROR >>> No battery connection at " + port + (" and this bus addresses: " + ", ".join(BATTERY_ADDRESSES) if BATTERY_ADDRESSES else ""))
             raise Exception("BMS DEVICE NOT FOUND")
 
         for key_address in self.battery:
