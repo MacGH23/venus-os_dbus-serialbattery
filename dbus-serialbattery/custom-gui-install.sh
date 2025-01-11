@@ -320,6 +320,9 @@ if [ "$hash_installed" != "$hash_available" ]; then
 
             rm -f /tmp/venus-webassembly.zip
 
+            echo "Restart vrmlogger to make GUIv2 changes visible in VRM Portal..."
+            svc -t /service/vrmlogger
+
             echo "done."
 
         fi

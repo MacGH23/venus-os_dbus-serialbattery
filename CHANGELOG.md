@@ -13,6 +13,17 @@
 
 ### Breaking Changes
 
+* Driver version greater or equal to `v2.0.20250107dev`
+  * Changes to `config.default.ini`: `CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_TIME_RESTART` was superseeded by `SWITCH_TO_FLOAT_CELL_VOLTAGE_DEVIATION`, which has a different behavior
+  * Changes to `config.default.ini`: `CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL` was replaced by `SWITCH_TO_FLOAT_CELL_VOLTAGE_DIFF`
+  * Changes to `config.default.ini`: `CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT` was replaced by `SWITCH_TO_BULK_CELL_VOLTAGE_DIFF`
+  * Changes to `config.default.ini`: `CVL_ICONTROLLER_FACTOR` was replaced by `CVL_CONTROLLER_KI`
+  * Changes to `config.default.ini`: `CVL_ICONTROLLER_MODE` was superseeded by `CVL_CONTROLLER_MODE`, which has a different behavior
+  * Changes to `config.default.ini`: `LINEAR_LIMITATION_ENABLE` was superseeded by `CHARGE_MODE`, which has a different behavior
+  * Changes to `config.default.ini`: `LINEAR_RECALCULATION_EVERY` was replaced by `CVL_RECALCULATION_EVERY`
+  * Changes to `config.default.ini`: `LINEAR_RECALCULATION_ON_PERC_CHANGE` was replaced by `CVL_RECALCULATION_ON_MAX_PERCENTAGE_CHANGE`
+  * Changes to `config.default.ini`: `MAX_VOLTAGE_TIME_SEC` was replaced by `SWITCH_TO_FLOAT_WAIT_FOR_SEC`
+
 * Driver version greater or equal to `v2.0.20250103dev`
   * Changes to `config.default.ini`: `SOC_LEVEL_TO_RESET_VOLTAGE_LIMIT` was replaced by `SWITCH_TO_BULK_SOC_THRESHOLD`
 
@@ -42,17 +53,21 @@
 * Added: Felicity BMS by @versager
 * Added: JKBMS CAN - Extended protocol with version V2 by @Hooorny and @mr-manuel
 * Added: LiTime BMS by @calledit
+* Added: D-Controller for managing CVL on high cell voltage by @mr-manuel
 * Added: Make battery data available on MQTT under a single topic by enabling `PUBLISH_BATTERY_DATA_AS_JSON` by @mr-manuel
 * Added: Min/Max lifetime temperature to history class and battery template by @mr-manuel
 * Added: Pace BMS by @KoljaWindeler
+* Added: PID-Controller for managing CVL on high cell voltage by @mr-manuel
 * Added: Possibility to add external sensor for SoC by @mr-manuel
 * Added: Signal handler for clean service restart/shutdown by @mr-manuel
 * Changed: A lot of under the hood optimizations by @mr-manuel
 * Changed: Apply `SOC_RESET_VOLTAGE` after `SOC_RESET_AFTER_DAYS` regardless of whether the battery is in absorption, bulk, or float mode https://github.com/mr-manuel/venus-os_dbus-serialbattery/issues/123 by @mr-manuel
 * Changed: Consumed capacity must be negative values by @mr-manuel
+* Changed: Daly CAN - Driver improvements by @transistorgit
 * Changed: Daly CAN - Refactored driver to match new CAN standard by @mr-manuel and @transistorgit
 * Changed: Dependencies are now shipped with the driver and not downloaded anymore which allows a complete offline installation by @mr-manuel
 * Changed: Driver was moved from `/data/etc/dbus-serialbattery` to `/data/apps/dbus-serialbattery` by @mr-manuel
+* Changed: EG4 LifePower - Fixed wrong cell voltage decoding. Fixes https://github.com/mr-manuel/venus-os_dbus-serialbattery/issues/155 by @dchiquito
 * Changed: Fix `/Info/BatteryLowVoltage` remaining `None` https://github.com/mr-manuel/venus-os_dbus-serialbattery/issues/145 by @mr-manuel
 * Changed: Fix missing charge/discharge fet status for EG4 LifePower, EG4 LL and Renogy. Fixes https://github.com/mr-manuel/venus-os_dbus-serialbattery/issues/129 by @mr-manuel
 * Changed: Fixed issue, when calculated SOC is restored from dbus and BMS SOC is 0 by @mr-manuel
@@ -62,8 +77,17 @@
 * Changed: Refactored driver installation via USB/SD card by @mr-manuel
 * Changed: The driver is now running directly from it's app folder. No need to copy the `config.ini` file anywhere, which means changes are applied by simply restarting the service by @mr-manuel
 * Changed: The root filesystem is not mounted as read-write anymore, since overlay filesystems are used now. This allows to let the core system files untouched and to revert all changes with one command. The changes are now also persistant and do not have to be installed on every Venus OS update again by @mr-manuel
+* Changed: The setting `CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_TIME_RESTART` was superseeded by `SWITCH_TO_FLOAT_CELL_VOLTAGE_DEVIATION`, which has a different behavior by @mr-manuel
+* Changed: The setting `CELL_VOLTAGE_DIFF_KEEP_MAX_VOLTAGE_UNTIL` was replaced by `SWITCH_TO_FLOAT_CELL_VOLTAGE_DIFF` by @mr-manuel
+* Changed: The setting `CELL_VOLTAGE_DIFF_TO_RESET_VOLTAGE_LIMIT` was replaced by `SWITCH_TO_BULK_CELL_VOLTAGE_DIFF` by @mr-manuel
+* Changed: The setting `CVL_ICONTROLLER_FACTOR` was replaced by `CVL_CONTROLLER_KI` in the `config.default.ini` by @mr-manuel
+* Changed: The setting `CVL_ICONTROLLER_MODE` was superseeded by `CVL_CONTROLLER_MODE`, which has a different behavior by @mr-manuel
 * Changed: The setting `EXTERNAL_CURRENT_SENSOR_DBUS_DEVICE` was replaced by `EXTERNAL_SENSOR_DBUS_DEVICE` in the `config.default.ini` by @mr-manuel
 * Changed: The setting `EXTERNAL_CURRENT_SENSOR_DBUS_PATH` was replaced by `EXTERNAL_SENSOR_DBUS_PATH_CURRENT` in the `config.default.ini` by @mr-manuel
+* Changed: The setting `LINEAR_LIMITATION_ENABLE` was superseeded by `CHARGE_MODE`, which has a different behavior by @mr-manuel
+* Changed: The setting `LINEAR_RECALCULATION_EVERY` was replaced by `CVL_RECALCULATION_EVERY` by @mr-manuel
+* Changed: The setting `LINEAR_RECALCULATION_ON_PERC_CHANGE` was replaced by `CVL_RECALCULATION_ON_MAX_PERCENTAGE_CHANGE` by @mr-manuel
+* Changed: The setting `MAX_VOLTAGE_TIME_SEC` was replaced by `SWITCH_TO_FLOAT_WAIT_FOR_SEC` by @mr-manuel
 * Changed: The setting `MODBUS_ADDRESSES` was replaced by `BATTERY_ADDRESSES` in the `config.default.ini` by @mr-manuel
 * Changed: The setting `SEPLOS_USE_BMS_VALUES` was replaced by `USE_BMS_DVCC_VALUES` in the `config.default.ini` by @mr-manuel
 * Changed: The setting `SOC_CALC_CURRENT_MEASURED_BY_USER` was replaced by `CURRENT_MEASURED_BY_USER` in the `config.default.ini` by @mr-manuel
@@ -326,7 +350,7 @@
 * Changed: Make CCL and DCL limiting messages more clear by @mr-manuel
 * Changed: More detailed error output when an exception happens by @mr-manuel
 * Changed: Optimized CVL calculation on high cell voltage for smoother charging with https://github.com/Louisvdw/dbus-serialbattery/pull/882 by @cflenker
-* Changed: Reduce the big inrush current if the CVL jumps from Bulk/Absorbtion to Float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS & @ogurevich
+* Changed: Reduce the big inrush current if the CVL jumps from bulk/absorption to float https://github.com/Louisvdw/dbus-serialbattery/issues/659 by @Rikkert-RS & @ogurevich
 * Changed: Sinowealth BMS - Fixed not loading https://github.com/Louisvdw/dbus-serialbattery/issues/702 by @mr-manuel
 * Changed: Time-to-Go and Time-to-SoC use the current average of the last 5 minutes for calculation by @mr-manuel
 * Changed: Time-to-SoC calculate only positive points by @mr-manuel
